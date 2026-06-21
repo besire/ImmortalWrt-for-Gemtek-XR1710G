@@ -463,8 +463,6 @@
 			reset-names = "mac", "phy";
 
 			airoha,scu = <&scuclk>;
-
-			#pcs-cells = <0>;
 		};
 
 		eth_pcs: pcs@1fa09000 {
@@ -486,8 +484,6 @@
 			reset-names = "mac", "phy";
 
 			airoha,scu = <&scuclk>;
-
-			#pcs-cells = <0>;
 		};
 
 		pcie_pcs: pcs@1fa04000 {
