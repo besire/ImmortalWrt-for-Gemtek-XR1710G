@@ -44,18 +44,55 @@ jobs:
             echo "has_updates=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Merge upstream
-        id: merge
+      - name: Merge upstream (strategy: theirs)
+        id: merge_theirs
         if: steps.check.outputs.has_updates == 'true'
         run: |
-          git merge --no-edit upstream/master -X theirs || {
-            echo "::error::Merge failed even with -X theirs strategy."
+          echo "Attempting merge with -X theirs strategy..."
+          if git merge --no-edit upstream/master -X theirs; then
+            echo "Merge succeeded with -X theirs"
+            echo "merge_success=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Merge with -X theirs failed, aborting..."
+            git merge --abort 2>/dev/null || true
+            echo "merge_success=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Merge upstream (fallback: recursive)
+        id: merge_fallback
+        if: steps.check.outputs.has_updates == 'true' && steps.merge_theirs.outputs.merge_success != 'true'
+        run: |
+          echo "Attempting merge with recursive strategy..."
+          if git merge --no-edit upstream/master -X recursive -X patience; then
+            echo "Merge succeeded with recursive strategy"
+            echo "merge_success=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Merge with recursive also failed, aborting..."
+            git merge --abort 2>/dev/null || true
+            echo "::error::All merge strategies failed."
             echo "Conflicting files:"
-            git diff --name-only --diff-filter=U || true
-            echo "Attempting to abort merge..."
-            git merge --abort || true
-            exit 1
-          }
+            git diff --name-only --diff-filter=U 2>/dev/null || echo "No conflict files found"
+            echo "merge_success=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check merge result
+        id: merge_check
+        if: steps.check.outputs.has_updates == 'true'
+        run: |
+          MERGE_SUCCESS="${{ steps.merge_theirs.outputs.merge_success }}"
+          if [ "$MERGE_SUCCESS" != "true" ]; then
+            MERGE_SUCCESS="${{ steps.merge_fallback.outputs.merge_success }}"
+          fi
+          if [ "$MERGE_SUCCESS" != "true" ]; then
+            echo "::error::Merge failed with all strategies."
+            echo "Attempting to rebase onto upstream instead..."
+            git rebase upstream/master || {
+              echo "::error::Rebase also failed."
+              git rebase --abort 2>/dev/null || true
+              exit 1
+            }
+            echo "Rebase succeeded!"
+          fi
 
       - name: Restore local customizations
         if: steps.check.outputs.has_updates == 'true'
@@ -75,11 +112,17 @@ jobs:
         run: |
           git add -A
           git commit -m "Sync upstream ImmortalWrt" || echo "No changes to commit"
-          git push origin master --force || {
-            echo "::error::Push failed. May be branch protected or permission issue."
-            echo "Please check branch protection rules"
-            exit 1
-          }
+          echo "Attempting to push..."
+          if git push origin master; then
+            echo "Push succeeded!"
+          else
+            echo "::error::Push failed. Attempting force push..."
+            git push origin master --force || {
+              echo "::error::Force push also failed. May be branch protected or permission issue."
+              echo "Please check branch protection rules or manually resolve conflicts."
+              exit 1
+            }
+          fi
 
       - name: Show result
         if: always()
