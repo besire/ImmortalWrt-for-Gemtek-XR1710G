@@ -45,17 +45,41 @@ jobs:
           fi
 
       - name: Merge upstream
+        id: merge
         if: steps.check.outputs.has_updates == 'true'
         run: |
-          git merge --no-edit upstream/master || {
-            echo "::error::Merge failed. Conflicts need manual resolution."
-            git diff --name-only --diff-filter=U
+          git merge --no-edit upstream/master -X theirs || {
+            echo "::error::Merge failed even with -X theirs strategy."
+            echo "Conflicting files:"
+            git diff --name-only --diff-filter=U || true
+            echo "Attempting to abort merge..."
+            git merge --abort || true
             exit 1
           }
 
+      - name: Restore local customizations
+        if: steps.check.outputs.has_updates == 'true'
+        run: |
+          # Restore Airoha-specific kernel configs that may be lost during merge
+          CONFIG_FILE="target/linux/airoha/an7583/config-6.18"
+          if [ -f "$CONFIG_FILE" ]; then
+            # Add back critical Airoha configs if missing
+            if ! grep -q "CONFIG_AIROHA_CPU_PM_DOMAIN" "$CONFIG_FILE"; then
+              sed -i '1a CONFIG_AIROHA_CPU_PM_DOMAIN=y\n# CONFIG_MTK_SCPSYS is not set\n# CONFIG_MTK_SCPSYS_PM_DOMAINS is not set\nCONFIG_AIROHA_SCU_SSR=y' "$CONFIG_FILE"
+              echo "Restored Airoha CPU PM Domain config"
+            fi
+          fi
+
       - name: Push to origin
         if: steps.check.outputs.has_updates == 'true'
-        run: git push origin master
+        run: |
+          git add -A
+          git commit -m "Sync upstream ImmortalWrt" || echo "No changes to commit"
+          git push origin master --force || {
+            echo "::error::Push failed. May be branch protected or permission issue."
+            echo "Please check branch protection rules"
+            exit 1
+          }
 
       - name: Show result
         if: always()
