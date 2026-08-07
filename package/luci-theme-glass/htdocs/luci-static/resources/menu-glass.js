@@ -114,29 +114,16 @@ return baseclass.extend({
 		container.insertBefore(slider, container.firstChild);
 		var self = this;
 
-		/* Attach click handlers to all tabs */
+		/* Page links use native navigation; in-page tabs only move the slider. */
 		var tabs = container.querySelectorAll('.header-tab, .sub-tab');
-		for (var i = 0; i < tabs.length; i++) {
-			(function(tab, sl) {
-				tab.addEventListener('click', function(ev) {
-					if (navigateOnClick) {
-						/* Slide first, then navigate */
-						ev.preventDefault();
-						var prev = container.querySelector('.header-tab.active, .sub-tab.active');
-						if (prev) prev.classList.remove('active');
-						tab.classList.add('active');
+		if (!navigateOnClick) {
+			for (var i = 0; i < tabs.length; i++) {
+				(function(tab, sl) {
+					tab.addEventListener('click', function() {
 						self.positionTabSlider(container, sl, tab, true);
-						document.body.classList.add('page-leaving');
-						var href = tab.href;
-						setTimeout(function() {
-							window.location.href = href;
-						}, 180);
-					} else {
-						/* In-page tab switch — just move slider */
-						self.positionTabSlider(container, sl, tab, true);
-					}
-				});
-			})(tabs[i], slider);
+					});
+				})(tabs[i], slider);
+			}
 		}
 
 		/* Position on active tab */
@@ -234,23 +221,6 @@ return baseclass.extend({
 					}, [
 						E('span', { 'class': 'nav-label' }, [ _(sub.title) ])
 					]);
-
-					/* Slide highlight to clicked item before navigating */
-					(function(el, sl) {
-						el.addEventListener('click', function(ev) {
-							ev.preventDefault();
-							var prev = el.parentNode.querySelector('.nav-item.active');
-							if (prev) prev.classList.remove('active');
-							el.classList.add('active');
-							sl.style.top = el.offsetTop + 'px';
-							sl.style.height = el.offsetHeight + 'px';
-							sl.style.opacity = '1';
-							document.body.classList.add('page-leaving');
-							setTimeout(function() {
-								window.location.href = el.href;
-							}, 180);
-						});
-					})(subItem, slider);
 
 					subMenu.appendChild(subItem);
 				}

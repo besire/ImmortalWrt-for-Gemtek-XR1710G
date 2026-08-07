@@ -204,3 +204,74 @@ msgstr ""
 msgid ""
 "You must enable JavaScript in your browser or LuCI will not work properly."
 msgstr ""
+
+#: htdocs/luci-static/resources/status-glass.js:79
+#: htdocs/luci-static/resources/status-glass.js:178
+msgid "CPU usage (%)"
+msgstr ""
+
+#: htdocs/luci-static/resources/status-glass.js:180
+msgid "core"
+msgstr ""
+
+#: htdocs/luci-static/resources/status-glass.js:180
+msgid "cores"
+msgstr ""
+
+#: htdocs/luci-static/resources/status-glass.js:252
+msgid "day"
+msgstr ""
+
+#: htdocs/luci-static/resources/status-glass.js:252
+msgid "days"
+msgstr ""
+
+#: htdocs/luci-static/resources/status-glass.js:253
+msgid "hour"
+msgstr ""
+
+#: htdocs/luci-static/resources/status-glass.js:253
+msgid "hours"
+msgstr ""
+
+#: htdocs/luci-static/resources/status-glass.js:225
+msgid "Link Speed"
+msgstr ""
+
+#: htdocs/luci-static/resources/status-glass.js:80
+#: htdocs/luci-static/resources/status-glass.js:193
+msgid "Memory usage (%)"
+msgstr ""
+
+#: htdocs/luci-static/resources/status-glass.js:152
+msgid "Network"
+msgstr ""
+
+#: htdocs/luci-static/resources/status-glass.js:254
+msgid "less than a minute"
+msgstr ""
+
+#: htdocs/luci-static/resources/status-glass.js:254
+msgid "minute"
+msgstr ""
+
+#: htdocs/luci-static/resources/status-glass.js:254
+msgid "minutes"
+msgstr ""
+
+#: htdocs/luci-static/resources/status-glass.js:81
+#: htdocs/luci-static/resources/status-glass.js:202
+msgid "Uptime"
+msgstr ""
+
+#: ucode/template/themes/glass/header.ut:154
+msgid "Toggle menu"
+msgstr ""
+
+#: htdocs/luci-static/resources/status-glass.js:242
+msgid "%dd %dh"
+msgstr ""
+
+#: htdocs/luci-static/resources/status-glass.js:243
+msgid "%dh %dm"
+msgstr ""
