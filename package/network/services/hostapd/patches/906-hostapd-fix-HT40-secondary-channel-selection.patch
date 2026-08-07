@@ -1,0 +1,70 @@
+From 56e0489b73fea87b2ee8ed2318e15ae3f680ab14 Mon Sep 17 00:00:00 2001
+From: Allen Ye <allen.ye@mediatek.com>
+Date: Tue, 4 Aug 2026 14:34:33 +0800
+Subject: [PATCH] hostapd: Fix ht40_plus_minus_allowed secondary channel
+ selection
+
+When both HT40+ and HT40- are allowed (ht40_plus_minus_allowed) and the
+configured secondary_channel direction fails the usability check, the
+code should probe only the opposing direction. The old code probed both
++20 and -20 unconditionally, redundantly retrying the already-failing
+direction.
+
+Replace the two fixed-offset probes with a single probe at
+-secondary_channel * 20, select the corresponding allowed_bw flag
+(HOSTAPD_CHAN_WIDTH_40P for +1, HOSTAPD_CHAN_WIDTH_40M for -1) based on
+the new direction, and flip secondary_channel only if the probe
+succeeds.
+
+Signed-off-by: Allen Ye <allen.ye@mediatek.com>
+---
+ src/ap/hw_features.c | 24 +++++++++++++-----------
+ 1 file changed, 13 insertions(+), 11 deletions(-)
+
+diff --git a/src/ap/hw_features.c b/src/ap/hw_features.c
+index be8ed5352..1ffaa4098 100644
+--- a/src/ap/hw_features.c
++++ b/src/ap/hw_features.c
+@@ -1090,7 +1090,8 @@ static bool hostapd_is_usable_punct_bitmap(struct hostapd_iface *iface)
+  */
+ static int hostapd_is_usable_chans(struct hostapd_iface *iface)
+ {
+-	int secondary_freq;
++	int secondary_freq, new_sec;
++	enum hostapd_chan_width_attr bw_flag;
+ 	struct hostapd_channel_data *pri_chan;
+ 	int err, err2;
+ 
+@@ -1133,18 +1134,19 @@ static int hostapd_is_usable_chans(struct hostapd_iface *iface)
+ 	if (!iface->conf->ht40_plus_minus_allowed)
+ 		return err;
+ 
+-	/* Both HT40+ and HT40- are set, pick a valid secondary channel */
+-	secondary_freq = iface->freq + 20;
+-	err2 = hostapd_is_usable_chan(iface, secondary_freq, 0);
+-	if (err2 > 0 && (pri_chan->allowed_bw & HOSTAPD_CHAN_WIDTH_40P)) {
+-		iface->conf->secondary_channel = 1;
+-		return 1;
+-	}
++	/* Both HT40+ and HT40- are set, check the swapped pri/sec channel
++	 * option for a 40 MHz channel */
++	new_sec = -iface->conf->secondary_channel;
++	bw_flag = new_sec == 1 ?
++		HOSTAPD_CHAN_WIDTH_40P : HOSTAPD_CHAN_WIDTH_40M;
+ 
+-	secondary_freq = iface->freq - 20;
++	secondary_freq = iface->freq + new_sec * 20;
+ 	err2 = hostapd_is_usable_chan(iface, secondary_freq, 0);
+-	if (err2 > 0 && (pri_chan->allowed_bw & HOSTAPD_CHAN_WIDTH_40M)) {
+-		iface->conf->secondary_channel = -1;
++	if (err2 <= 0)
++		return err;
++
++	if (pri_chan->allowed_bw & bw_flag) {
++		iface->conf->secondary_channel = new_sec;
+ 		return 1;
+ 	}
+ 
+-- 
+2.43.0
+

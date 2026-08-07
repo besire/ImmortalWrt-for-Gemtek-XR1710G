@@ -1,0 +1,31 @@
+From 2b7ec3abf52cbb469e768760601f7af1be43feee Mon Sep 17 00:00:00 2001
+From: Govindaraj Saminathan <govindaraj.saminathan@oss.qualcomm.com>
+Date: Thu, 16 Jul 2026 16:30:41 +0530
+Subject: [PATCH] hostapd: Reset num_multi_hws on interface cleanup
+
+hostapd_cleanup_iface_partial() frees and NULLs iface->multi_hw_info but
+leaves iface->num_multi_hws at its previous non-zero value.  If
+hostapd_set_current_hw_info() is called after a partial cleanup (e.g.,
+during interface restart), it skips the early return and dereferences
+the already-freed multi_hw_info array.
+
+Reset num_multi_hws to 0 alongside the NULL assignment so the two fields
+remain consistent.
+
+Signed-off-by: Govindaraj Saminathan <govindaraj.saminathan@oss.qualcomm.com>
+---
+ src/ap/hostapd.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/ap/hostapd.c b/src/ap/hostapd.c
+index fb60462..b5f713f 100644
+--- a/src/ap/hostapd.c
++++ b/src/ap/hostapd.c
+@@ -742,6 +742,7 @@ void hostapd_cleanup_iface_partial(struct hostapd_iface *iface)
+ 	airtime_policy_update_deinit(iface);
+ 	hostapd_free_multi_hw_info(iface->multi_hw_info);
+ 	iface->multi_hw_info = NULL;
++	iface->num_multi_hws = 0;
+ 	iface->current_hw_info = NULL;
+ }
+ 

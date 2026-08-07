@@ -1,0 +1,41 @@
+From 109f1125d08a43d4f343114699a57b18428f4b67 Mon Sep 17 00:00:00 2001
+From: Ilan Peer <ilan.peer@intel.com>
+Date: Wed, 10 Jun 2026 16:11:56 +0300
+Subject: [PATCH] AP: Fix heap-buffer-overflow when printing STA identity
+
+The EAPOL state machine identity is not guaranteed to be NULL
+terminated, e.g., when set from PMKSA cache data. Fix
+ieee802_1x_get_mib_sta() to copy the identity into a NULL terminated
+buffer before using it as a printf string argument.
+
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+---
+ src/ap/ieee802_1x.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/src/ap/ieee802_1x.c b/src/ap/ieee802_1x.c
+index 96a8454..7f47318 100644
+--- a/src/ap/ieee802_1x.c
++++ b/src/ap/ieee802_1x.c
+@@ -3002,7 +3002,11 @@ int ieee802_1x_get_mib_sta(struct hostapd_data *hapd, struct sta_info *sta,
+ 		id = eap_get_identity(sm->eap, &id_len);
+ 		if (id)
+ 			identity_buf = dup_binstr(id, id_len);
++	} else if (sm->eap && sm->identity) {
++		identity_buf = dup_binstr(sm->identity,
++					  sm->identity_len);
+ 	}
++
+ 	ret = os_snprintf(buf + len, buflen - len,
+ 			  /* TODO: dot1xAuthSessionOctetsRx */
+ 			  /* TODO: dot1xAuthSessionOctetsTx */
+@@ -3018,8 +3022,7 @@ int ieee802_1x_get_mib_sta(struct hostapd_data *hapd, struct sta_info *sta,
+ 				   wpa_auth_sta_key_mgmt(sta->wpa_sm))) ?
+ 			  1 : 2,
+ 			  (unsigned int) diff.sec,
+-			  sm->identity ? (char *) sm->identity :
+-					 (identity_buf ? identity_buf : "N/A"));
++			  identity_buf ? identity_buf : "N/A");
+ 	os_free(identity_buf);
+ 	if (os_snprintf_error(buflen - len, ret))
+ 		return len;
