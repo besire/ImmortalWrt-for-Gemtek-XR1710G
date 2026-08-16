@@ -15,8 +15,8 @@ and use DMA read barriers after observing the done bits so descriptor
 metadata is not consumed before ownership transfers.
 
 Fixes: 141a81557070 ("wifi: mt76: Introduce the NPU generic layer")
-Assisted-by: Codex:gpt-5.6-sol
 Signed-off-by: Yanghan Ye <yyh94306@gmail.com>
+Assisted-by: Codex:GPT-5.6-sol
 ---
  npu.c | 33 +++++++++++++++++++++++++--------
  1 file changed, 25 insertions(+), 8 deletions(-)

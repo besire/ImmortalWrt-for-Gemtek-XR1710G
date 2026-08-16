@@ -13,8 +13,8 @@ coherent-memory release action on the Wi-Fi consumer and hold the supplier
 device until that action runs. Preserve the existing dmam behavior when
 both devices are the same.
 
-Assisted-by: Codex:gpt-5.6-sol
 Signed-off-by: Yanghan Ye <yyh94306@gmail.com>
+Assisted-by: Codex:GPT-5.6-sol
 ---
  dma.c        | 55 ++++++++++++++++++++++++++++++++++++++++++++++++++--
  mt76.h       |  2 ++

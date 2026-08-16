@@ -19,8 +19,8 @@ visible first, and q->head exposes only the contiguous boundary that
 was successfully replenished.
 
 Fixes: 141a81557070 ("wifi: mt76: Introduce the NPU generic layer")
-Assisted-by: Codex:gpt-5.6-sol
 Signed-off-by: Yanghan Ye <yyh94306@gmail.com>
+Assisted-by: Codex:GPT-5.6-sol
 ---
  npu.c | 8 ++++++--
  1 file changed, 6 insertions(+), 2 deletions(-)
