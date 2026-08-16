@@ -16,19 +16,55 @@ var callSetVlanOffload = rpc.declare({ object: 'luci.airoha_npu', method: 'setVl
 var callGetPPPoEOffload = rpc.declare({ object: 'luci.airoha_npu', method: 'getPPPoEOffload', nobatch: true });
 var callSetPPPoEOffload = rpc.declare({ object: 'luci.airoha_npu', method: 'setPPPoEOffload', params: ['enabled'] });
 
+var ppeSnapshot = { entries: [], truncated: false };
+
 function loadStatusData() {
-	// Probe the guarded status endpoint first. If hardware access times out,
-	// the backend circuit breaker is set before the remaining probes run.
-	return L.resolveDefault(callNpuStatus(), {}).then(function(status) {
-		return Promise.all([
-			status,
-			L.resolveDefault(callPpeEntries(), { entries: [] }),
-			L.resolveDefault(callTokenInfo(), { tx_queues: [], station_counts: [] }),
-			L.resolveDefault(callFrameEngine(), { error: 'unavailable' }),
-			L.resolveDefault(callGetVlanOffload(), { enabled: 0 }),
-			L.resolveDefault(callGetPPPoEOffload(), { enabled: 0 })
-		]);
+	return Promise.all([
+		L.resolveDefault(callNpuStatus(), {}),
+		L.resolveDefault(callTokenInfo(), { tx_queues: [], station_counts: [] }),
+		L.resolveDefault(callFrameEngine(), { error: 'unavailable' }),
+		L.resolveDefault(callGetVlanOffload(), { enabled: 0 }),
+		L.resolveDefault(callGetPPPoEOffload(), { enabled: 0 })
+	]).then(function(data) {
+		return [data[0], ppeSnapshot, data[1], data[2], data[3], data[4]];
 	});
+}
+
+function addPpeStats(status, ppe) {
+	var entries = Array.isArray(ppe && ppe.entries) ? ppe.entries : [];
+	var bound = 0;
+
+	for (var i = 0; i < entries.length; i++)
+		if (entries[i].state === 'BND')
+			bound++;
+
+	status.offload_bound = bound;
+	status.offload_total = entries.length;
+	status.offload_truncated = !!(ppe && ppe.truncated);
+	return status;
+}
+
+function updatePpeView(ppe) {
+	ppeSnapshot = ppe && Array.isArray(ppe.entries) ? ppe : { entries: [], truncated: false };
+	var entries = ppeSnapshot.entries;
+	var stats = addPpeStats({}, ppeSnapshot);
+	var bound = document.getElementById('fe-ppe-bound');
+	var total = document.getElementById('fe-ppe-total');
+	var table = document.getElementById('ppe-entries-table');
+
+	if (bound)
+		bound.textContent = stats.offload_bound.toString() + (ppeSnapshot.truncated ? '+' : '');
+	if (total)
+		total.textContent = stats.offload_total.toString() + (ppeSnapshot.truncated ? '+' : '');
+	if (table) {
+		while (table.rows.length > 1)
+			table.deleteRow(1);
+		renderPpeRows(entries).forEach(function(row) { table.appendChild(row); });
+	}
+}
+
+function refreshPpeData() {
+	return L.resolveDefault(callPpeEntries(), { entries: [], truncated: false }).then(updatePpeView);
 }
 
 /* ── Theme-adaptive CSS ── */
@@ -296,11 +332,11 @@ function renderFeDiagram(fe, ti, st) {
 		E('div', { 'style': 'display:flex;gap:16px;font-size:12px' }, [
 			E('span', {}, [
 				E('span', { 'class': 'soc-muted' }, _('Bound') + ' '),
-				E('span', { 'class': 'soc-text', 'style': 'font-weight:bold', 'id': 'fe-ppe-bound' }, (st.offload_bound||0).toString())
+				E('span', { 'class': 'soc-text', 'style': 'font-weight:bold', 'id': 'fe-ppe-bound' }, (st.offload_bound||0).toString()+(st.offload_truncated?'+':''))
 			]),
 			E('span', {}, [
 				E('span', { 'class': 'soc-muted' }, _('Total') + ' '),
-				E('span', { 'class': 'soc-text', 'id': 'fe-ppe-total' }, (st.offload_total||0).toString())
+				E('span', { 'class': 'soc-text', 'id': 'fe-ppe-total' }, (st.offload_total||0).toString()+(st.offload_truncated?'+':''))
 			])
 		])
 	]);
@@ -479,6 +515,7 @@ return view.extend({
 		injectCSS();
 		var st = data[0]||{}, ppe = data[1]||{}, ti = data[2]||{}, fe = data[3]||{}, vo = data[4]||{}, po = data[5]||{};
 		var entries = Array.isArray(ppe.entries) ? ppe.entries : [];
+		st = addPpeStats(st, ppe);
 		var memR = Array.isArray(st.memory_regions) ? st.memory_regions : [];
 		var ns = npuState(st, ti);
 
@@ -534,7 +571,7 @@ return view.extend({
 			return loadStatusData().then(L.bind(function(d) {
 				injectCSS();
 				var st=d[0]||{}, ppe=d[1]||{}, ti=d[2]||{}, fe=d[3]||{}, vo=d[4]||{}, po=d[5]||{};
-				var entries = Array.isArray(ppe.entries)?ppe.entries:[];
+				st = addPpeStats(st, ppe);
 
 				updateFreqBar(st.cpu_cur_freq||st.cpu_hw_freq,st.cpu_min_freq,st.cpu_max_freq,st.pll_freq_mhz,st.cpu_governor);
 				var gs=document.getElementById('cpu-governor-select'); if(gs&&!gs.matches(':focus')) gs.value=st.cpu_governor||'';
@@ -547,10 +584,11 @@ return view.extend({
 
 				var fc=document.getElementById('fe-container'); if(fc){fc.innerHTML='';fc.appendChild(renderFeDiagram(fe, ti, st));}
 
-				var tb=document.getElementById('ppe-entries-table');
-				if(tb){while(tb.rows.length>1)tb.deleteRow(1);renderPpeRows(entries).forEach(function(r){tb.appendChild(r);});}
 			},this));
-		},this), 5);
+		},this), 10);
+
+		refreshPpeData();
+		poll.add(refreshPpeData, 30);
 
 		return view;
 	},
