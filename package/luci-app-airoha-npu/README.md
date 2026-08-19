@@ -63,7 +63,7 @@ Real-time monitoring and management dashboard for the Airoha AN7581 SoC on OpenW
 - Airoha AN7581 target (`@TARGET_airoha`)
 - PPE debugfs (`/sys/kernel/debug/ppe/entries`)
 - **`devmem`** busybox applet — required for Frame Engine register access and CPU overclock (`CONFIG_BUSYBOX_DEFAULT_DEVMEM=y`)
-- WiFi token_info debugfs for per-band WiFi stats (`/sys/kernel/debug/ieee80211/phy0/mt76/token_info`)
+- WiFi token_info debugfs for per-band WiFi stats (`/sys/kernel/debug/ieee80211/phy*/mt76/token_info`)
 - Optional: [air_tools](https://github.com/merbanan/air_tools) scripts for additional Frame Engine debugging
 
 ## Installation
@@ -103,7 +103,7 @@ ssh root@router 'chmod +x /usr/libexec/rpcd/luci.airoha_npu && /etc/init.d/rpcd 
 | CPU frequency | `/sys/devices/system/cpu/cpufreq/policy0/` | Yes |
 | Overclock PLL | `devmem` registers (0x1fa202b4, 0x1fa202b8) | devmem |
 | PPE entries | `/sys/kernel/debug/ppe/{entries,bind}` | Yes |
-| WiFi token pool | `/sys/kernel/debug/ieee80211/phy0/mt76/token_info` | Optional |
+| WiFi token pool | `/sys/kernel/debug/ieee80211/phy*/mt76/token_info` | Optional |
 | WiFi station stats | `iw dev <iface> station dump` | Optional |
 | Frame Engine (GDM/CDM/PSE) | `devmem` registers (0x1fb50xxx-0x1fb53xxx) | devmem |
 
