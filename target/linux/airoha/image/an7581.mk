@@ -148,7 +148,7 @@ define Device/gemtek_xr1710g-ubi
 		    -kmod-pwm-airoha \
 		    airoha-en7581-mt7996-npu-firmware \
 		    apk-mbedtls ethtool-full fitblk \
-		    ip-bridge ip-full iperf3 mdio-tools phytool tcpdump \
+		    ip-bridge ip-full iperf3 mdio-tools openssh-sftp-server phytool tcpdump \
 		    kmod-i2c-an7581 kmod-hwmon-nct7802 \
 		    kmod-mt7996-firmware kmod-phy-realtek \
 		    kmod-airoha-net-debug rtl826x-firmware \
