@@ -259,7 +259,7 @@ Signed-off-by: Yanghan Ye <yyh94306@gmail.com>
  	spin_lock_bh(&ppe_lock);
  
  	hwe = airoha_ppe_foe_get_entry_locked(ppe, hash);
-@@ -799,8 +940,10 @@
+@@ -799,8 +940,8 @@
  	airoha_ppe_foe_set_bridge_addrs(&br, eth_hdr(skb));
  	e = rhashtable_lookup_fast(&ppe->l2_flows, &br,
  				   airoha_l2_flow_table_params);
