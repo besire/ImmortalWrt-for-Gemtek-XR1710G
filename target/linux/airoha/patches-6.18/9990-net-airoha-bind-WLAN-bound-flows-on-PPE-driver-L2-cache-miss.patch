@@ -35,6 +35,7 @@ Signed-off-by: Yanghan Ye <yyh94306@gmail.com>
  #include <linux/of_platform.h>
 @@ -708,65 +708,206 @@
  }
+-- 
  
  static int
 -airoha_ppe_foe_commit_subflow_entry(struct airoha_ppe *ppe,
