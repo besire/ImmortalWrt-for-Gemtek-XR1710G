@@ -16,8 +16,8 @@ Stop the MT7996 NPU after mac80211 unregisters but before DMA cleanup, and
 defer provider puts until both RCU pointers have been cleared and a grace
 period has elapsed.
 
-Assisted-by: Codex:gpt-5.6-sol
 Signed-off-by: Yanghan Ye <yyh94306@gmail.com>
+Assisted-by: Codex:GPT-5.6-sol
 ---
  mt76.h        |   7 ++++
  mt7996/init.c |   6 +++

@@ -19,8 +19,8 @@ have raced the first mask operation.
 Also unwind partially allocated queues and reject IRQ scheduling once
 teardown starts.
 
-Assisted-by: Codex:gpt-5.6-sol
 Signed-off-by: Yanghan Ye <yyh94306@gmail.com>
+Assisted-by: Codex:GPT-5.6-sol
 ---
  mt76.h |   1 +
  npu.c  | 108 ++++++++++++++++++++++++++++-----------------------------

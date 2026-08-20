@@ -15,8 +15,8 @@ handshake.
 Preserve mailbox errors from the stop status query instead of converting
 every failure to -ETIMEDOUT.
 
-Assisted-by: Codex:gpt-5.6-sol
 Signed-off-by: Yanghan Ye <yyh94306@gmail.com>
+Assisted-by: Codex:GPT-5.6-sol
 ---
  mt7996/npu.c | 86 ++++++++++++++++++++++++++++++++++++----------------
  npu.c        | 17 +++++++++--

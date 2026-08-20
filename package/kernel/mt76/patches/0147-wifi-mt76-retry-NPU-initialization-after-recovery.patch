@@ -16,8 +16,8 @@ so both initial probe and SER recovery get the same one-shot retry.
 Do not restart the NPU for permanent configuration or allocation errors,
 and return the second failure without looping.
 
-Assisted-by: Codex:gpt-5.6-sol
 Signed-off-by: Yanghan Ye <yyh94306@gmail.com>
+Assisted-by: Codex:GPT-5.6-sol
 ---
  mt7996/npu.c | 39 +++++++++++++++++++++++++++++++++------
  npu.c        | 17 +++++++++++++++++

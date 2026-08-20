@@ -15,8 +15,8 @@ prevents a live descriptor from being overwritten if software queue
 accounting and descriptor ownership disagree.
 
 Fixes: 141a81557070 ("wifi: mt76: Introduce the NPU generic layer")
-Assisted-by: Codex:gpt-5.6-sol
 Signed-off-by: Yanghan Ye <yyh94306@gmail.com>
+Assisted-by: Codex:GPT-5.6-sol
 ---
  dma.c  |  3 +++
  mt76.h |  6 ++++++
