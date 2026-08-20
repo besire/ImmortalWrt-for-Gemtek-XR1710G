@@ -1,0 +1,58 @@
+#!/bin/sh
+
+. /lib/functions.sh
+. /lib/functions/system.sh
+
+[ "$(board_name)" = "gemtek,xr1710g-ubi" ] || exit 0
+
+migrated=0
+
+normalize_xr1710g_netdev() {
+	case "$1" in
+	wan|ae_wan) printf 'eth1' ;;
+	wan.*) printf 'eth1%s' "${1#wan}" ;;
+	wan:*) printf 'eth1%s' "${1#wan}" ;;
+	ae_wan.*) printf 'eth1%s' "${1#ae_wan}" ;;
+	ae_wan:*) printf 'eth1%s' "${1#ae_wan}" ;;
+	cpu) printf 'eth2' ;;
+	cpu.*) printf 'eth2%s' "${1#cpu}" ;;
+	cpu:*) printf 'eth2%s' "${1#cpu}" ;;
+	*) printf '%s' "$1" ;;
+	esac
+}
+
+migrate_option() {
+	local config="$1" option="$2" value values normalized new_values="" changed=0
+	config_get values "$config" "$option"
+	[ -n "$values" ] || return 0
+	for value in $values; do
+		normalized="$(normalize_xr1710g_netdev "$value")"
+		[ "$normalized" = "$value" ] || changed=1
+		new_values="${new_values}${new_values:+ }$normalized"
+	done
+	[ "$changed" -eq 1 ] || return 0
+	uci -q delete "network.$config.$option"
+	for value in $new_values; do
+		uci add_list "network.$config.$option=$value"
+	done
+	migrated=1
+}
+
+migrate_interface() {
+	local config="$1" device normalized
+	config_get device "$config" device
+	[ -n "$device" ] || return 0
+	normalized="$(normalize_xr1710g_netdev "$device")"
+	[ "$normalized" = "$device" ] && return 0
+	uci set "network.$config.device=$normalized"
+	migrated=1
+}
+
+config_load network
+config_foreach migrate_option device ports
+config_foreach migrate_option device ifname
+config_foreach migrate_interface interface
+
+[ "$migrated" -eq 1 ] || exit 0
+uci commit network
+exit 0
