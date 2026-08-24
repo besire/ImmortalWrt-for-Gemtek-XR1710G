@@ -79,7 +79,7 @@ Signed-off-by: Yanghan Ye <yyh94306@gmail.com>
 @@ -207,12 +206,13 @@ static int __airoha_npu_send_msg(struct
  					      REG_CR_MBQ0_CTRL(3) + offset,
  					      val, (val & MBOX_MSG_DONE),
- 					      100, 100 * MSEC_PER_SEC);
+					      100, 1000 * MSEC_PER_SEC);
 -	if (!ret && FIELD_GET(MBOX_MSG_STATUS, val) != NPU_MBOX_SUCCESS)
 -		ret = -EINVAL;
 -
