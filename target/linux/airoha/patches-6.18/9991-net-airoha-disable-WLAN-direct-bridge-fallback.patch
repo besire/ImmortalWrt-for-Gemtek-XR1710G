@@ -1,0 +1,22 @@
+From: naoki66 <naoki66@qq.com>
+Date: Thu, 20 Aug 2026 19:00:00 +0800
+Subject: [PATCH] net: airoha: disable WLAN direct bridge fallback for testing
+
+Keep the 9990 WLAN flow preparation but disable its untracked direct
+bridge PPE commit path for issue #28 testing.
+
+---
+ drivers/net/ethernet/airoha/airoha_ppe.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/drivers/net/ethernet/airoha/airoha_ppe.c
++++ b/drivers/net/ethernet/airoha/airoha_ppe.c
+@@ -940,8 +940,8 @@
+ 	if (e)
+ 		airoha_ppe_foe_commit_subflow_entry(ppe, e, hash, rx_wlan);
+ 	else if (bridge_ready)
+-		airoha_ppe_foe_commit_subflow(ppe, &bridge_hwe, hash, rx_wlan);
++		; /* direct bridge fallback disabled for testing */
+ unlock:
+ 	spin_unlock_bh(&ppe_lock);
+ }

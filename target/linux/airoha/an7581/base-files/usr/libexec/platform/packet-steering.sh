@@ -4,9 +4,9 @@
 . /lib/functions/system.sh
 
 mode="$1"
-
 steering_flows="$(uci -q get 'network.@globals[0].steering_flows')"
 opts=""
+
 case "$steering_flows" in
 	''|*[!0-9]*) ;;
 	*) [ "$steering_flows" -gt 0 ] && opts="-l $steering_flows" ;;
@@ -15,7 +15,6 @@ esac
 /usr/libexec/network/packet-steering.uc $opts "$mode"
 
 [ "$mode" != "0" ] || exit 0
-
 [ "$(board_name)" = "gemtek,xr1710g-ubi" ] || exit 0
 
 cpu_count=0
@@ -39,6 +38,7 @@ for comm in /proc/[0-9]*/task/[0-9]*/comm; do
 	read -r name < "$comm"
 	task="${comm%/comm}"
 	tid="${task##*/}"
+
 	case "$name" in
 		napi/phy*)
 			taskset -pc "$next_cpu" "$tid" >/dev/null 2>&1
@@ -50,3 +50,5 @@ for comm in /proc/[0-9]*/task/[0-9]*/comm; do
 			;;
 	esac
 done
+
+exit 0
